@@ -7,20 +7,23 @@ import (
 )
 
 func handleConn(conn net.Conn) {
+	defer conn.Close()
+
+	buffer := make([]byte, 1024)
 	for {
-		buffer := make([]byte, 1024)
 		n, err := conn.Read(buffer)
+		if n > 0 {
+			log.Printf("[conn: local=%s remote=%s] read: %d bytes\n", conn.LocalAddr(), conn.RemoteAddr(), n)
+			conn.Write(buffer[0:n])
+		}
 		if err != nil {
 			if err == io.EOF {
 				log.Printf("[conn: local=%s remote=%s] closing\n", conn.LocalAddr(), conn.RemoteAddr())
-				conn.Close()
 				break
 			} else {
 				log.Fatal(err)
 			}
 		}
-		log.Printf("[conn: local=%s remote=%s] read: %d bytes\n", conn.LocalAddr(), conn.RemoteAddr(), n)
-		conn.Write(buffer)
 	}
 }
 
